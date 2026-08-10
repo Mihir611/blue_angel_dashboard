@@ -1,19 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { 
-    ArrowLeft, 
-    ShieldCheck, 
-    UserPlus, 
-    Search, 
-    ShieldAlert, 
-    Trash2, 
-    Check, 
-    Shield 
+import {
+    ArrowLeft,
+    ShieldCheck,
+    UserPlus,
+    Search,
+    ShieldAlert,
+    Shield,
+    Pencil,
+    Save,
+    X,
+    Loader2,
+    Settings2,
 } from "lucide-react";
 import DashboardLayout from "@/app/components/dashboard/DashboardLayout";
 import Alert from "@/app/components/alerts/page";
+import { TextField, TextAreaField, ToggleField } from "@/app/components/dashboard/FormFields";
+import { getCommunityById } from "@/lib/api";
+import { updateCommunityData } from "@/lib/api";
 
 interface Member {
     id: string;
@@ -32,11 +38,97 @@ const INITIAL_MEMBERS: Member[] = [
     { id: "5", name: "Ananya Roy", email: "ananya@touring.org", role: "moderator", joinedAt: "Feb 2025" },
 ];
 
-export default function GroupModeratorsPage({ params }: { params: { groupId: string } }) {
+interface CommunityDetailsForm {
+    description: string;
+    tagline: string;
+    instagramHandle: string;
+    hasSubCommunities: boolean;
+    commanderName: string;
+    commanderEmail: string;
+    commanderPhoneNumber: string;
+}
+
+interface GroupModeratorsPageProps {
+    params: Promise<{ groupId: string }>;
+}
+
+export default function GroupModeratorsPage({ params }: GroupModeratorsPageProps) {
     const router = useRouter();
+    const { groupId } = use(params);
     const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
     const [searchQuery, setSearchQuery] = useState("");
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
+    // --- Community details state ---
+    const [details, setDetails] = useState<CommunityDetailsForm | null>(null);
+    const [originalDetails, setOriginalDetails] = useState<CommunityDetailsForm | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [detailsLoading, setDetailsLoading] = useState(true);
+    const [detailsError, setDetailsError] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        async function loadCommunity() {
+            setDetailsLoading(true);
+            setDetailsError(null);
+            try {
+                const res = await getCommunityById(groupId);
+                const c = res.data.community;
+                const mapped: CommunityDetailsForm = {
+                    description: c.description ?? "",
+                    tagline: c.tagline ?? "",
+                    instagramHandle: c.instagramHandle ?? "",
+                    hasSubCommunities: c.hasSubCommunities ?? false,
+                    commanderName: c.general?.name ?? "",
+                    commanderEmail: c.general?.email ?? "",
+                    commanderPhoneNumber: c.general?.phoneNumber ?? "",
+                };
+                setDetails(mapped);
+                setOriginalDetails(mapped);
+            } catch (err) {
+                setDetailsError("Failed to load community details.");
+            } finally {
+                setDetailsLoading(false);
+            }
+        }
+        loadCommunity();
+    }, [groupId]);
+
+    function updateField<K extends keyof CommunityDetailsForm>(field: K, value: CommunityDetailsForm[K]) {
+        setDetails((prev) => (prev ? { ...prev, [field]: value } : prev));
+    }
+
+    function handleCancelEdit() {
+        setDetails(originalDetails);
+        setIsEditing(false);
+    }
+
+    async function handleSaveDetails() {
+        if (!details) return;
+        setSaving(true);
+        setDetailsError(null);
+
+        try {
+            await updateCommunityData(groupId, {
+                description: details.description,
+                tagline: details.tagline,
+                instagramHandle: details.instagramHandle,
+                hasSubCommunities: details.hasSubCommunities,
+                general: {
+                    name: details.commanderName,
+                    email: details.commanderEmail,
+                    phoneNumber: details.commanderPhoneNumber,
+                },
+            });
+            setOriginalDetails(details);
+            setIsEditing(false);
+            setAlertMessage("Community details updated successfully.");
+        } catch (err) {
+            setDetailsError("Failed to save changes. Please try again.");
+        } finally {
+            setSaving(false);
+        }
+    }
 
     // Promote rider to moderator
     function handlePromote(id: string) {
@@ -88,6 +180,130 @@ export default function GroupModeratorsPage({ params }: { params: { groupId: str
                 <span>RETURN TO SQUADRON DIRECTORY</span>
             </button>
 
+            {/* Community Details Panel */}
+            <div className="mb-6 overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/50 p-6 backdrop-blur-xl">
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                    <div className="flex items-center gap-2.5">
+                        <Settings2 size={18} className="text-orange-500" />
+                        <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-orange-400">
+                            // Community Configuration
+                        </h2>
+                    </div>
+
+                    {!detailsLoading && details && (
+                        <div className="flex items-center gap-2">
+                            {isEditing ? (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={handleCancelEdit}
+                                        disabled={saving}
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-slate-400 transition-colors hover:text-slate-200 disabled:opacity-50"
+                                    >
+                                        <X size={12} /> Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleSaveDetails}
+                                        disabled={saving}
+                                        className="inline-flex items-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-orange-400 transition-colors hover:bg-orange-500/20 disabled:opacity-50"
+                                    >
+                                        {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                                        {saving ? "Saving..." : "Save Changes"}
+                                    </button>
+                                </>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditing(true)}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-orange-400 transition-colors hover:bg-orange-500/20"
+                                >
+                                    <Pencil size={12} /> Edit Details
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {detailsError && (
+                    <div className="mb-4 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 font-mono text-xs text-red-400">
+                        <span>[CONFIG ERROR]: {detailsError}</span>
+                    </div>
+                )}
+
+                {detailsLoading ? (
+                    <div className="flex items-center justify-center gap-2 py-10 font-mono text-xs text-slate-500">
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Loading community details...</span>
+                    </div>
+                ) : details ? (
+                    <div className="space-y-5">
+                        <TextAreaField
+                            label="Squad Description"
+                            rows={3}
+                            value={details.description}
+                            disabled={!isEditing}
+                            onChange={(e) => updateField("description", e.target.value)}
+                        />
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <TextField
+                                label="Tagline"
+                                maxLength={150}
+                                value={details.tagline}
+                                disabled={!isEditing}
+                                onChange={(e) => updateField("tagline", e.target.value)}
+                            />
+                            <TextField
+                                label="Instagram Handle"
+                                value={details.instagramHandle}
+                                disabled={!isEditing}
+                                onChange={(e) => updateField("instagramHandle", e.target.value)}
+                                placeholder="@squad_handle"
+                            />
+                        </div>
+
+                        <ToggleField
+                            label="This squad has sub-communities / chapters"
+                            checked={details.hasSubCommunities}
+                            disabled={!isEditing}
+                            onChange={(checked: boolean) => updateField("hasSubCommunities", checked)}
+                        />
+
+                        {/* Commander (formerly "general") contact block */}
+                        <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-4">
+                            <p className="mb-4 font-mono text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                                Commander Details
+                            </p>
+                            <div className="space-y-4">
+                                <TextField
+                                    label="Commander Name"
+                                    value={details.commanderName}
+                                    disabled={!isEditing}
+                                    onChange={(e) => updateField("commanderName", e.target.value)}
+                                />
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <TextField
+                                        label="Commander Email"
+                                        type="email"
+                                        value={details.commanderEmail}
+                                        disabled={!isEditing}
+                                        onChange={(e) => updateField("commanderEmail", e.target.value)}
+                                    />
+                                    <TextField
+                                        label="Commander Phone"
+                                        type="tel"
+                                        value={details.commanderPhoneNumber}
+                                        disabled={!isEditing}
+                                        onChange={(e) => updateField("commanderPhoneNumber", e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : null}
+            </div>
+
             {/* Header Telemetry Status Card */}
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-800/80 bg-slate-900/50 p-5 backdrop-blur-xl">
                 <div className="flex items-center gap-3.5">
@@ -119,7 +335,6 @@ export default function GroupModeratorsPage({ params }: { params: { groupId: str
             <div className="overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/50 backdrop-blur-xl">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left font-mono text-xs">
-                        {/* Table Header */}
                         <thead className="border-b border-slate-800/80 bg-slate-950/60 uppercase tracking-wider text-slate-400">
                             <tr>
                                 <th className="px-6 py-4">Rider / Member</th>
@@ -129,7 +344,6 @@ export default function GroupModeratorsPage({ params }: { params: { groupId: str
                             </tr>
                         </thead>
 
-                        {/* Table Body */}
                         <tbody className="divide-y divide-slate-800/50 text-slate-200">
                             {filteredMembers.map((member) => {
                                 const isCommander = member.role === "commander";
@@ -140,7 +354,6 @@ export default function GroupModeratorsPage({ params }: { params: { groupId: str
                                         key={member.id}
                                         className="transition-colors hover:bg-slate-800/30"
                                     >
-                                        {/* Rider Profile */}
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 bg-slate-950 font-bold text-orange-400">
@@ -153,7 +366,6 @@ export default function GroupModeratorsPage({ params }: { params: { groupId: str
                                             </div>
                                         </td>
 
-                                        {/* Role Badge */}
                                         <td className="px-6 py-4">
                                             {isCommander && (
                                                 <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold text-amber-400">
@@ -172,10 +384,8 @@ export default function GroupModeratorsPage({ params }: { params: { groupId: str
                                             )}
                                         </td>
 
-                                        {/* Joined Date */}
                                         <td className="px-6 py-4 text-slate-400">{member.joinedAt}</td>
 
-                                        {/* Action Button */}
                                         <td className="px-6 py-4 text-right">
                                             {isCommander ? (
                                                 <span className="text-[10px] text-slate-600">// PRIMARY ADMIN</span>

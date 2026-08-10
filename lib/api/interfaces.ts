@@ -30,20 +30,198 @@ export interface LoginResponse {
     };
 }
 
+//#region Community interfaces
+export interface Community {
+    _id: string;
+    communityName: string;
+    email: string;
+    phoneNumber: string;
+    logo: string;
+    incorporationDate: string;
+    description: string;
+    tagline?: string;
+    instagramHandle?: string;
+    location: {
+        city: string;
+        state: string;
+        country: string;
+    };
+    general: {
+        name: string;
+        email: string;
+        phoneNumber: string;
+    };
+    hasSubCommunities: boolean;
+    communityLevel: number;
+    isPrivate?: boolean;
+    memberCount?: Number;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface GetCommunitiesParams {
+    page?: number;
+    limit?: number;
+    city?: string;
+    state?: string;
+    country?: string;
+}
+
+export interface CommunitiesGetResponse {
+    Success: boolean;
+    results: number;
+    total: number;
+    page: number;
+    totalPages: number;
+    data: {
+        communities: Community[];
+    };
+}
+
+export interface CommunityGetByIdResponse {
+    Success: boolean;
+    data: {
+        community: Community;
+    };
+}
+
+export interface CommunityUpdatePayload {
+    description: string;
+    tagline: string;
+    instagramHandle: string;
+    hasSubCommunities: boolean;
+    general: {
+        email: string;
+        phoneNumber: string
+        name: string;
+    }
+}
+
+export interface CommunityUpdateResponse {
+    Success: boolean;
+    data: { community: Community };
+    message: string;
+}
+
+export interface CreateCommunityPayload {
+    communityName: string,
+    email: string,
+    phoneNumber: string;
+    logo: string,
+    incorporationDate: string,
+    description: string,
+    tagline: string,
+    instagramHandle: string,
+    location: {
+        city: string;
+        state: string;
+        country: string;
+    },
+    general: {
+        name: string;
+        email: string;
+        phoneNumber: string;
+    },
+    hasSubCommunities: boolean,
+}
+
+export interface CreateCommunityResponse {
+    Success: boolean,
+    message: string
+}
+//#endregion Community interfaces
+
 export interface CreateAnnouncementPayload {
-  title: string;
-  description: string;
-  imageUrl?: string;
-  link?: string;
-  displayOrder: number;
-  isActive: boolean;
-  priority: AnnouncementPriority;
-  expiresAt?: string; // ISO date string; omit for an announcement that never expires
+    title: string;
+    description: string;
+    imageUrl?: string;
+    link?: string;
+    displayOrder: number;
+    isActive: boolean;
+    priority: AnnouncementPriority;
+    expiresAt?: string; // ISO date string; omit for an announcement that never expires
 }
 
 export interface CreateAnnouncementResponse {
-  id: string;
-  title: string;
+    id: string;
+    title: string;
+}
+
+//#region Event interfaces
+export interface Events {
+    _id?: string;
+    location: {
+        city: string;
+        state: string;
+        country: string;
+    },
+    title: string;
+    description: string;
+    imageUrl: string;
+    eventDate: string;
+    category: string;
+    price: Number;
+    contactInfo: {
+        email: string;
+        phone: string;
+    },
+    tags: string;
+    isActive: boolean;
+}
+
+export interface CreateEventResponse {
+    success: boolean;
+    message: string;
+    data: Events
+}
+
+export interface CreateEventPayload {
+    eventsData: Events;
+}
+
+export interface GetEvents {
+    success: boolean;
+    message: string;
+    data: Events[];
+}
+
+export interface GetEventById {
+    success: boolean;
+    message: string;
+    data: Events;
+}
+
+export interface EventUpdatePayload {
+    eventsData: Partial<Omit<Events, "_id">>;
+}
+
+//#endregion Event interfaces
+
+//#region Blood interfaces
+export interface BloodRequestPayload {
+    patientName: string;
+    bloodGroup: string;
+    unitsRequired: number;
+    urgency: "critical" | "urgent" | "normal";
+    hospital: {
+        name: string;
+        address: string;
+        city: string;
+        state?: string;
+        location: {
+            type: "Point";
+            coordinates: [number, number]; // [lng, lat]
+        };
+    };
+    contactNumber: string;
+    alternateContactNumber?: string;
+    requiredBy: string; // ISO date string
+    additionalNotes?: string;
+}
+
+export interface BloodRequestResponse {
+    Success: boolean;
+    data: { bloodRequest: any };
 }
 
 //#region Dashboard Interfaces
@@ -103,6 +281,7 @@ export interface ToggleFieldProps {
     checked: boolean;
     onChange: (checked: boolean) => void;
     hint?: string;
+    disabled?: boolean;
 }
 
 export interface TagsInputFieldProps {

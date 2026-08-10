@@ -190,6 +190,7 @@ export function ToggleField({
     checked,
     onChange,
     hint,
+    disabled = false
 }: ToggleFieldProps) {
     return (
         <div className="flex items-center justify-between rounded-xl border border-slate-800/80 bg-slate-950/80 p-4">
@@ -207,6 +208,7 @@ export function ToggleField({
                 role="switch"
                 aria-checked={checked}
                 onClick={() => onChange(!checked)}
+                disabled={disabled}
                 className={`relative h-6 w-11 shrink-0 rounded-full border transition-colors duration-200 ${checked
                         ? "border-orange-500 bg-orange-500/20"
                         : "border-slate-800 bg-slate-900"

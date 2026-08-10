@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Flag, MapPin, Contact2 } from "lucide-react";
+import { useEffect, useState, FormEvent } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { ArrowLeft, Flag, MapPin, Contact2, Loader2 } from "lucide-react";
 import DashboardLayout from "@/app/components/dashboard/DashboardLayout";
-import Alert from "@/app/components/alerts/page";
 import {
     TextField,
     TextAreaField,
@@ -14,7 +13,11 @@ import {
     ImageUploadField,
     SubmitButton,
 } from "@/app/components/dashboard/FormFields";
-import { EVENT_CATEGORIES, EventCategory, createEventsApi, Events, CreateEventResponse, ApiError } from "@/lib/api";
+import {
+    EVENT_CATEGORIES,
+    EventCategory,
+    getEventByID
+} from "@/lib/api";
 
 const CATEGORY_LABELS: Record<EventCategory, string> = {
     Adventure: "Adventure Expedition",
@@ -27,8 +30,20 @@ const CATEGORY_LABELS: Record<EventCategory, string> = {
     other: "Custom Expedition",
 };
 
-export default function CreateRidePage() {
+function toDatetimeLocal(iso: string) {
+    // Converts an ISO string to the "YYYY-MM-DDTHH:mm" format <input type="datetime-local"> expects
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+export default function EditRidePage() {
     const router = useRouter();
+    const params = useParams();
+    const eventId = params?.eventId as string;
+
+    const [fetching, setFetching] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -50,6 +65,58 @@ export default function CreateRidePage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    useEffect(() => {
+        if (!eventId) return;
+
+        let cancelled = false;
+
+        async function fetchEvent() {
+            setFetching(true);
+            setFetchError(null);
+            try {
+                const res = await getEventByID(eventId);
+                if (cancelled) return;
+
+                if (!res.success) {
+                    setFetchError(res.message || "Failed to load expedition.");
+                    return;
+                }
+                
+                const e = res.data;
+                setTitle(e.title);
+                setDescription(e.description);
+                setImageUrl(e.imageUrl || null);
+                setEventDate(toDatetimeLocal(e.eventDate));
+
+                const knownCategory = EVENT_CATEGORIES.includes(e.category as EventCategory);
+                setCategory(knownCategory ? (e.category as EventCategory) : "other");
+                setCategoryOther(knownCategory ? "" : e.category);
+
+                setPrice(String(e.price));
+                setTags(e.tags ? e.tags.split(",").filter(Boolean) : []);
+                setIsActive(e.isActive);
+                setCity(e.location.city);
+                setState(e.location.state);
+                setCountry(e.location.country);
+                setEmail(e.contactInfo.email);
+                setPhone(e.contactInfo.phone);
+            } catch (err: any) {
+                if (!cancelled) {
+                    setFetchError(
+                        err?.response?.data?.message || err?.message || "Failed to load expedition."
+                    );
+                }
+            } finally {
+                if (!cancelled) setFetching(false);
+            }
+        }
+
+        fetchEvent();
+        return () => {
+            cancelled = true;
+        };
+    }, [eventId]);
+
     async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         setError(null);
@@ -64,54 +131,66 @@ export default function CreateRidePage() {
         }
 
         setLoading(true);
-        const eventsData: Events = {
-            location: {
-                city,
-                state,
-                country,
-            },
-            title,
-            description,
-            imageUrl: imageUrl ?? "",
-            eventDate: new Date(eventDate),
-            category: category === "other" ? categoryOther : category,
-            price: Number(price),
-            contactInfo: {
-                email,
-                phone,
-            },
-            tags: tags.join(","),
-            isActive,
-        }
 
         try {
-            const res: CreateEventResponse = await createEventsApi({ eventsData });
-            if (res.success) {
-                setError(res.message || "Expedition published successfully!")
+            const response: UpdateEventResponse = await updateEventApi(eventId, {
+                eventsData: {
+                    location: { city, state, country },
+                    title,
+                    description,
+                    imageUrl: imageUrl ?? "",
+                    eventDate: new Date(eventDate).toISOString(),
+                    category: category === "other" ? categoryOther : category,
+                    price: Number(price),
+                    contactInfo: { email, phone },
+                    tags: tags.join(","),
+                    isActive,
+                },
+            });
+
+            if (response.success) {
+                alert(response.message || "Expedition updated successfully!");
+                router.push("/dashboard/Events");
             } else {
-                const msg = res.message || "Failed to publish expedition.";
-                setError(msg)
+                const msg = response.message || "Failed to update expedition.";
+                alert(msg);
+                setError(msg);
             }
-        } catch (err) {
-            const error = err as ApiError;
-            switch (error.status) {
-                case 409:
-                    setError(error.message);
-                    break;
-                case 400:
-                    setError(error.message);
-                    break;
-                default:
-                    setError(error.message || "Something went wrong.");
-            }
+        } catch (err: any) {
+            const message =
+                err?.response?.data?.message ||
+                err?.message ||
+                "Something went wrong while updating the expedition.";
+            alert(message);
+            setError(message);
         } finally {
             setLoading(false);
         }
     }
 
+    if (fetching) {
+        return (
+            <DashboardLayout title="Edit Ride / Event" subTitle="Update expedition details">
+                <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800/80 bg-slate-900/50 p-10 font-mono text-xs text-slate-400">
+                    <Loader2 size={16} className="animate-spin text-orange-500" />
+                    <span>LOADING EXPEDITION DATA...</span>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    if (fetchError) {
+        return (
+            <DashboardLayout title="Edit Ride / Event" subTitle="Update expedition details">
+                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 font-mono text-xs text-red-400">
+                    [LOAD ERROR]: {fetchError}
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     return (
-        <DashboardLayout title="Dispatch Ride / Event" subTitle="Organize a route rally or community event">
-            {/* Navigation back button */}
+        <DashboardLayout title="Edit Ride / Event" subTitle="Update expedition details">
             <button
                 onClick={() => router.push("/dashboard/Events")}
                 className="group mb-6 inline-flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-2 font-mono text-xs text-slate-400 transition-all hover:border-orange-500/50 hover:text-orange-400"
@@ -121,7 +200,6 @@ export default function CreateRidePage() {
             </button>
 
             <form onSubmit={handleSubmit} className="mx-auto max-w-3xl space-y-6">
-                {/* Details */}
                 <section className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/50 p-6 backdrop-blur-xl">
                     <div className="mb-5 flex items-center gap-2.5 border-b border-slate-800/80 pb-3">
                         <Flag size={18} className="text-orange-500" />
@@ -207,7 +285,6 @@ export default function CreateRidePage() {
                     </div>
                 </section>
 
-                {/* Location */}
                 <section className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/50 p-6 backdrop-blur-xl">
                     <div className="mb-5 flex items-center gap-2.5 border-b border-slate-800/80 pb-3">
                         <MapPin size={18} className="text-orange-500" />
@@ -223,7 +300,6 @@ export default function CreateRidePage() {
                     </div>
                 </section>
 
-                {/* Contact */}
                 <section className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/50 p-6 backdrop-blur-xl">
                     <div className="mb-5 flex items-center gap-2.5 border-b border-slate-800/80 pb-3">
                         <Contact2 size={18} className="text-orange-500" />
@@ -252,15 +328,16 @@ export default function CreateRidePage() {
                     </div>
                 </section>
 
+                {error && (
+                    <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 font-mono text-xs text-red-400">
+                        <span>[UPDATE ERROR]: {error}</span>
+                    </div>
+                )}
+
                 <SubmitButton loading={loading}>
-                    {loading ? "Publishing Expedition..." : "Publish Expedition to Radar"}
+                    {loading ? "Updating Expedition..." : "Save Expedition Changes"}
                 </SubmitButton>
             </form>
-            {error && (
-                <Alert variant="error" title="Initialize Squad Charter Error" onClose={() => setError(null)}>
-                    {error}
-                </Alert>
-            )}
         </DashboardLayout>
     );
 }

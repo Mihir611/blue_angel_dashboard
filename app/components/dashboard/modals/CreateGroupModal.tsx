@@ -17,7 +17,6 @@ const CreateGroupModal = ({ open, onClose, onCreated }: CreateModalProps) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
-        // Creation logic goes here
     };
 
     return (

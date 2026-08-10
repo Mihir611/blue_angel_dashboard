@@ -2,25 +2,42 @@ export { makeRequest, axiosInstance } from './MakeRequest';
 export type { ApiError } from './MakeRequest';
 
 //Post Request Exports
-export { loginRequest } from './postRequest';
+export { loginRequest, createCommunity, createEventsApi, createBloodRequest } from './postRequest';
+export { getCommunities, getCommunityById, getEvents, getEventByID } from './getRequests';
+export { updateCommunityData } from './patchRequest';
 
 //Interface exports
-export type { 
-    LoginPayload, 
-    LoginResponse, 
-    NavItem, 
-    SidebarProps, 
-    DashboardLayoutProps, 
-    StatCardProps, 
-    DashboardModalProps, 
-    FieldWrapperProps, 
-    SelectFieldProps,
-    ImageUploadFieldProps,
-    ToggleFieldProps,
-    TagsInputFieldProps,
-    CreateModalProps,
-    QuickActionCardProps,
-    FeedPanelProps,
+export type {
+  LoginPayload,
+  LoginResponse,
+  Community,
+  GetCommunitiesParams,
+  CommunitiesGetResponse,
+  CreateCommunityPayload,
+  CreateCommunityResponse,
+  CommunityUpdatePayload,
+  CommunityUpdateResponse,
+  Events,
+  CreateEventPayload,
+  CreateEventResponse,
+  GetEvents,
+  GetEventById,
+  EventUpdatePayload,
+  BloodRequestPayload,
+  BloodRequestResponse,
+  NavItem,
+  SidebarProps,
+  DashboardLayoutProps,
+  StatCardProps,
+  DashboardModalProps,
+  FieldWrapperProps,
+  SelectFieldProps,
+  ImageUploadFieldProps,
+  ToggleFieldProps,
+  TagsInputFieldProps,
+  CreateModalProps,
+  QuickActionCardProps,
+  FeedPanelProps,
 } from './interfaces';
 
 export const ANNOUNCEMENT_PRIORITIES = ["info", "important", "urgent"] as const;
