@@ -11,7 +11,8 @@ import {
     Droplet, 
     ChevronLeft, 
     ChevronRight, 
-    Shield
+    Shield,
+    ClipboardCheck
 } from "lucide-react";
 import { NavItem, SidebarProps } from "@/lib/api";
 import pkg from "@/package.json";
@@ -22,6 +23,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: "Rides & Events", href: "/dashboard/Events", icon: Flag },
     { label: "Announcements", href: "/dashboard/Announcements", icon: Megaphone },
     { label: "Blood Requests", href: "/dashboard/Blood", icon: Droplet },
+    { label: "Applications", href: "/dashboard/ClubApplications", icon: ClipboardCheck}
 ];
 
 const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {

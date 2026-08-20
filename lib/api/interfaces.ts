@@ -4,6 +4,9 @@ import { AnnouncementPriority } from ".";
 export interface StoredUser {
     userId: string;
     email: string;
+    role: string;
+    riderLevel: string;
+    isPlatformOwner: boolean;
 }
 
 export interface AuthSession {
@@ -13,6 +16,7 @@ export interface AuthSession {
 }
 
 export interface LoginPayload {
+    context: string;
     email: string;
     password: string;
 }
@@ -27,6 +31,9 @@ export interface LoginResponse {
     user: {
         userId: string;
         email: string;
+        role: string;
+        riderLevel: string;
+        isPlatformOwner: boolean;
     };
 }
 
@@ -131,6 +138,47 @@ export interface CreateCommunityResponse {
 }
 //#endregion Community interfaces
 
+//#region CommunityApplication interfaces
+export interface CommunityApplication {
+    _id?: string;
+    applicantUserId: string;
+    communityName: string;
+    email: string;
+    phoneNumber: string;
+    logo: string;
+    incorporationDate: string;
+    description: string;
+    tagline?: string;
+    instagramHandle?: string;
+    location: {
+        city: string;
+        state: string;
+        country: string;
+    };
+    status: 'pending' | 'approved' | 'rejected';
+    reviewedBy: string | null;
+    reviewedAt: string | null;
+    rejectionReason: string | null;
+    applicationId: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface ApplicantInfo {
+    userName: string;
+    contact: {
+        email: string;
+        phone: string;
+    };
+}
+
+export interface GetCommunityApplicationResponse {
+    Success: boolean;
+    message: string;
+    data: {applications: CommunityApplication[]};
+}
+//#endregion CommunityApplication interfaces
+
 export interface CreateAnnouncementPayload {
     title: string;
     description: string;
@@ -199,6 +247,7 @@ export interface EventUpdatePayload {
 
 //#region Blood interfaces
 export interface BloodRequestPayload {
+    _id?: string;
     patientName: string;
     bloodGroup: string;
     unitsRequired: number;
@@ -216,12 +265,32 @@ export interface BloodRequestPayload {
     contactNumber: string;
     alternateContactNumber?: string;
     requiredBy: string; // ISO date string
+    createdBy: string;
     additionalNotes?: string;
 }
 
 export interface BloodRequestResponse {
     Success: boolean;
     data: { bloodRequest: any };
+}
+
+export interface GetBloodRequestParams {
+    status?: "active" | "fulfilled" | "expired" | "cancelled";
+    bloodGroup?: string;
+    urgency?: "critical" | "urgent" | "normal";
+    city?: string;
+    page?: number;
+    limit?: number;
+}
+
+export interface GetBloodRequests {
+    Success: boolean;
+    message: string;
+    results: number;
+    total: number;
+    page: number;
+    totalPages: number;
+    data: { bloodRequests: BloodRequestPayload[] };
 }
 
 //#region Dashboard Interfaces

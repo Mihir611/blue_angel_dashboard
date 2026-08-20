@@ -3,7 +3,7 @@ export type { ApiError } from './MakeRequest';
 
 //Post Request Exports
 export { loginRequest, createCommunity, createEventsApi, createBloodRequest } from './postRequest';
-export { getCommunities, getCommunityById, getEvents, getEventByID } from './getRequests';
+export { getCommunities, getCommunityById, getEvents, getEventByID, getBloodRequests, getApplications } from './getRequests';
 export { updateCommunityData } from './patchRequest';
 
 //Interface exports
@@ -25,6 +25,11 @@ export type {
   EventUpdatePayload,
   BloodRequestPayload,
   BloodRequestResponse,
+  GetBloodRequests,
+  GetBloodRequestParams,
+  CommunityApplication,
+  ApplicantInfo,
+  GetCommunityApplicationResponse,
   NavItem,
   SidebarProps,
   DashboardLayoutProps,

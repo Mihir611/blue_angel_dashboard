@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Activity, MapPin, PhoneCall, Crosshair } from "lucide-react";
+import { ArrowLeft, Activity, MapPin, PhoneCall, Crosshair, Club } from "lucide-react";
 import DashboardLayout from "@/app/components/dashboard/DashboardLayout";
 import {
     TextField,
@@ -39,6 +39,8 @@ export default function CreateBloodRequestPage() {
     const [contactNumber, setContactNumber] = useState("");
     const [alternateContactNumber, setAlternateContactNumber] = useState("");
 
+    // Club Details
+    const [createdBy, setCreatedBy] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -108,6 +110,7 @@ export default function CreateBloodRequestPage() {
                 contactNumber,
                 alternateContactNumber: alternateContactNumber || undefined,
                 requiredBy: new Date(requiredBy).toISOString(),
+                createdBy: createdBy,
                 additionalNotes: additionalNotes || undefined,
             };
 
@@ -235,7 +238,7 @@ export default function CreateBloodRequestPage() {
                             <TextField
                                 label="Latitude"
                                 required
-                                type="number"
+                                type="text"
                                 value={latitude}
                                 onChange={(e) => setLatitude(e.target.value)}
                                 placeholder="13.3409"
@@ -243,7 +246,7 @@ export default function CreateBloodRequestPage() {
                             <TextField
                                 label="Longitude"
                                 required
-                                type="number"
+                                type="text"
                                 value={longitude}
                                 onChange={(e) => setLongitude(e.target.value)}
                                 placeholder="74.7421"
@@ -280,6 +283,26 @@ export default function CreateBloodRequestPage() {
                     </div>
                 </section>
 
+                {/* Section 4: Contact Details */}
+                <section className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/50 p-6 backdrop-blur-xl">
+                    <div className="mb-5 flex items-center gap-2.5 border-b border-slate-800/80 pb-3">
+                        <Club size={18} className="text-red-400" />
+                        <h2 className="font-mono text-xs font-bold uppercase tracking-widest text-red-400">
+                            // Club Details
+                        </h2>
+                    </div>
+
+                    <div className="space-y-4">
+                        <TextField
+                            label="Club Name"
+                            required
+                            type="tel"
+                            value={createdBy}
+                            onChange={(e) => setCreatedBy(e.target.value)}
+                            placeholder="Club Motonomaad"
+                        />
+                    </div>
+                </section>
                 {error && (
                     <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 font-mono text-xs text-red-400">
                         <span>[DISPATCH ERROR]: {error}</span>

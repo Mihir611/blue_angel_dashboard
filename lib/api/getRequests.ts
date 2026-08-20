@@ -1,7 +1,7 @@
 import { AxiosRequestConfig } from "axios";
 import { makeRequest } from "./MakeRequest";
 import { getToken } from "../auth-client";
-import { GetCommunitiesParams, CommunitiesGetResponse, CommunityGetByIdResponse, GetEvents, GetEventById } from "./interfaces";
+import { GetCommunitiesParams, CommunitiesGetResponse, CommunityGetByIdResponse, GetEvents, GetEventById, GetBloodRequests, GetBloodRequestParams, GetCommunityApplicationResponse, CommunityApplication, ApplicantInfo } from "./interfaces";
 
 export function getAuthHeaders(): AxiosRequestConfig['headers'] {
     const token = getToken();
@@ -56,6 +56,44 @@ export function getEventByID(id: string, headers?: AxiosRequestConfig["headers"]
     return makeRequest<GetEventById>({
         ...baseConfig,
         url: `/home/Event?eventId=${id}`,
+        headers: {
+            ...baseConfig.headers,
+            ...getAuthHeaders(),
+            ...headers,
+        }
+    })
+}
+
+export function getBloodRequests(params: GetBloodRequestParams, headers?: AxiosRequestConfig["headers"]): Promise<GetBloodRequests> {
+    return makeRequest<GetBloodRequests>({
+        ...baseConfig,
+        url: '/blood',
+        params,
+        headers: {
+            ...baseConfig.headers,
+            ...getAuthHeaders(),
+            ...headers,
+        }
+    })
+}
+
+export function getApplications(headers?: AxiosRequestConfig["headers"]): Promise<GetCommunityApplicationResponse>{
+    return makeRequest<GetCommunityApplicationResponse>({
+        ...baseConfig,
+        url: '/communities/getApplications',
+        headers: {
+            ...baseConfig.headers,
+            ...getAuthHeaders(),
+            ...headers,
+        }
+    })
+}
+
+export function getApplicantInfo(applicantId: string, headers?: AxiosRequestConfig["headers"]): Promise<ApplicantInfo> {
+    return makeRequest<ApplicantInfo>({
+        ...baseConfig,
+        url: '/user/user-det',
+        params: {applicantId: applicantId},
         headers: {
             ...baseConfig.headers,
             ...getAuthHeaders(),

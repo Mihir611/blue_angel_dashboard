@@ -23,7 +23,7 @@ function LoginForm() {
         setError(null);
         setLoading(true);
         try {
-            const data = await loginRequest({ email: email.trim(), password });
+            const data = await loginRequest({ context: 'dashboard', email: email.trim(), password });
             const accessToken = data?.tokens?.accessToken;
             if (!data?.Success || !accessToken) {
                 setError("Sign-in succeeded but no token was returned.");

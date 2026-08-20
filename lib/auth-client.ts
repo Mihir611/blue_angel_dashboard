@@ -3,11 +3,15 @@ import { AuthSession, StoredUser } from "./api/interfaces";
 const ACCESS_TOKEN_KEY = "auth_token";
 const REFRESH_TOKEN_KEY = "auth_refresh_token";
 const USER_KEY = "auth_user";
+const USER_ROLE = "role";
+const RIDER_LEVEL = "riderLEvel";
 
 export function saveToken(session: AuthSession) {
     sessionStorage.setItem(ACCESS_TOKEN_KEY, session.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, session.refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(session.user));
+    sessionStorage.setItem(USER_ROLE, session.user.role);
+    sessionStorage.setItem(RIDER_LEVEL, session.user.riderLevel);
 }
 
 export function getToken(): string | null {
