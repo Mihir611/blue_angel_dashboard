@@ -5,6 +5,7 @@ export type { ApiError } from './MakeRequest';
 export { loginRequest, createCommunity, createEventsApi, createBloodRequest } from './postRequest';
 export { getCommunities, getCommunityById, getEvents, getEventByID, getBloodRequests, getApplications } from './getRequests';
 export { updateCommunityData } from './patchRequest';
+export { updateEventApi } from './putRequest';
 
 //Interface exports
 export type {
@@ -23,6 +24,7 @@ export type {
   GetEvents,
   GetEventById,
   EventUpdatePayload,
+  UpdateEventResponse,
   BloodRequestPayload,
   BloodRequestResponse,
   GetBloodRequests,

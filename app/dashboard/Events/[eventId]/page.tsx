@@ -16,7 +16,9 @@ import {
 import {
     EVENT_CATEGORIES,
     EventCategory,
-    getEventByID
+    getEventByID,
+    updateEventApi,
+    UpdateEventResponse
 } from "@/lib/api";
 
 const CATEGORY_LABELS: Record<EventCategory, string> = {

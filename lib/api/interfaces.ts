@@ -243,6 +243,11 @@ export interface EventUpdatePayload {
     eventsData: Partial<Omit<Events, "_id">>;
 }
 
+export interface UpdateEventResponse {
+    success: boolean;
+    message: string;
+    data: Events;
+}
 //#endregion Event interfaces
 
 //#region Blood interfaces
@@ -292,6 +297,7 @@ export interface GetBloodRequests {
     totalPages: number;
     data: { bloodRequests: BloodRequestPayload[] };
 }
+//#endregion Blood interfaces
 
 //#region Dashboard Interfaces
 export interface NavItem {
