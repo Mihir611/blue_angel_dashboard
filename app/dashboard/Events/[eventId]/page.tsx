@@ -22,14 +22,14 @@ import {
 } from "@/lib/api";
 
 const CATEGORY_LABELS: Record<EventCategory, string> = {
-    Adventure: "Adventure Expedition",
-    hangout: "Rider Hangout",
+    "Adventure": "Adventure Expedition",
+    "hangout": "Rider Hangout",
     "breakfast-ride": "Breakfast Ride",
     "lunch-ride": "Lunch Ride",
     "dinner-ride": "Dinner Ride",
-    touring: "Cross-Country Touring",
-    racing: "Track & Racing",
-    other: "Custom Expedition",
+    "touring": "Cross-Country Touring",
+    "racing": "Track & Racing",
+    "other": "Custom Expedition",
 };
 
 function toDatetimeLocal(iso: string) {
@@ -238,7 +238,7 @@ export default function EditRidePage() {
                                 label="Expedition Category"
                                 value={category}
                                 onChange={(v) => setCategory(v as EventCategory)}
-                                options={EVENT_CATEGORIES.map((c: string) => ({ value: c, label: CATEGORY_LABELS[c] || c }))}
+                                options={EVENT_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c] || c }))}
                             />
                             <TextField
                                 label="Launch Date & Time"

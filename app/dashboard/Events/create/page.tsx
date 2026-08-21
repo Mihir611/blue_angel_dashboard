@@ -73,7 +73,7 @@ export default function CreateRidePage() {
             title,
             description,
             imageUrl: imageUrl ?? "",
-            eventDate: new Date(eventDate),
+            eventDate: new Date(eventDate).toString(),
             category: category === "other" ? categoryOther : category,
             price: Number(price),
             contactInfo: {
@@ -158,7 +158,7 @@ export default function CreateRidePage() {
                                 label="Expedition Category"
                                 value={category}
                                 onChange={(v) => setCategory(v as EventCategory)}
-                                options={EVENT_CATEGORIES.map((c: string) => ({ value: c, label: CATEGORY_LABELS[c] || c }))}
+                                options={EVENT_CATEGORIES.map((c) => ({ value: c, label: CATEGORY_LABELS[c] || c }))}
                             />
                             <TextField
                                 label="Launch Date & Time"
